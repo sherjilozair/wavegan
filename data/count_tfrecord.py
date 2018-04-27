@@ -37,10 +37,10 @@ with tf.Session() as sess:
       nsamps += _xs[0]
     except:
       break
-  print n
-  print nsamps
-  print nsamps / 16000.
-  print nsamps / 16000. / 3600.
+  print (n)
+  print (nsamps)
+  print (nsamps / 16000.)
+  print (nsamps / 16000. / 3600.)
 
 for label, count in label_counts.items():
-  print label, count, count / float(n)
+  print (label, count, count / float(n))

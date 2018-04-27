@@ -1,4 +1,4 @@
-import cPickle as pickle
+import pickle
 import os
 import time
 
@@ -8,6 +8,7 @@ import tensorflow as tf
 import loader
 from wavegan import WaveGANGenerator, WaveGANDiscriminator
 
+import functools
 
 """
   Constants
@@ -36,15 +37,15 @@ def train(fps, args):
   G_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='G')
 
   # Print G summary
-  print '-' * 80
-  print 'Generator vars'
+  print('-' * 80)
+  print('Generator vars')
   nparams = 0
   for v in G_vars:
     v_shape = v.get_shape().as_list()
-    v_n = reduce(lambda x, y: x * y, v_shape)
+    v_n = functools.reduce(lambda x, y: x * y, v_shape)
     nparams += v_n
-    print '{} ({}): {}'.format(v.get_shape().as_list(), v_n, v.name)
-  print 'Total params: {} ({:.2f} MB)'.format(nparams, (float(nparams) * 4) / (1024 * 1024))
+    print('{} ({}): {}'.format(v.get_shape().as_list(), v_n, v.name))
+  print('Total params: {} ({:.2f} MB)'.format(nparams, (float(nparams) * 4) / (1024 * 1024)))
 
   # Summarize
   tf.summary.audio('x', x, _FS)
@@ -62,16 +63,16 @@ def train(fps, args):
   D_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='D')
 
   # Print D summary
-  print '-' * 80
-  print 'Discriminator vars'
+  print ('-' * 80)
+  print ('Discriminator vars')
   nparams = 0
   for v in D_vars:
     v_shape = v.get_shape().as_list()
-    v_n = reduce(lambda x, y: x * y, v_shape)
+    v_n = functools.reduce(lambda x, y: x * y, v_shape)
     nparams += v_n
-    print '{} ({}): {}'.format(v.get_shape().as_list(), v_n, v.name)
-  print 'Total params: {} ({:.2f} MB)'.format(nparams, (float(nparams) * 4) / (1024 * 1024))
-  print '-' * 80
+    print ('{} ({}): {}'.format(v.get_shape().as_list(), v_n, v.name))
+  print ('Total params: {} ({:.2f} MB)'.format(nparams, (float(nparams) * 4) / (1024 * 1024)))
+  print ('-' * 80)
 
   # Make fake discriminator
   with tf.name_scope('D_G_z'), tf.variable_scope('D', reuse=True):
@@ -181,7 +182,7 @@ def train(fps, args):
       save_summaries_secs=args.train_summary_secs) as sess:
     while True:
       # Train discriminator
-      for i in xrange(args.wavegan_disc_nupdates):
+      for i in range(args.wavegan_disc_nupdates):
         sess.run(D_train_op)
 
         # Enforce Lipschitz constraint for WGAN
@@ -341,7 +342,7 @@ def preview(args):
   while True:
     latest_ckpt_fp = tf.train.latest_checkpoint(args.train_dir)
     if latest_ckpt_fp != ckpt_fp:
-      print 'Preview: {}'.format(latest_ckpt_fp)
+      print ('Preview: {}'.format(latest_ckpt_fp))
 
       with tf.Session() as sess:
         saver.restore(sess, latest_ckpt_fp)
@@ -361,30 +362,30 @@ def preview(args):
         fig = plt.figure()
         plt.title('Digital filter frequncy response')
         ax1 = fig.add_subplot(111)
+  
+  plt.plot(w, 20 * np.log10(abs(h)), 'b')
+  plt.ylabel('Amplitude [dB]', color='b')
+  plt.xlabel('Frequency [rad/sample]')
 
-	plt.plot(w, 20 * np.log10(abs(h)), 'b')
-	plt.ylabel('Amplitude [dB]', color='b')
-	plt.xlabel('Frequency [rad/sample]')
+  ax2 = ax1.twinx()
+  angles = np.unwrap(np.angle(h))
+  plt.plot(w, angles, 'g')
+  plt.ylabel('Angle (radians)', color='g')
+  plt.grid()
+  plt.axis('tight')
 
-	ax2 = ax1.twinx()
-	angles = np.unwrap(np.angle(h))
-	plt.plot(w, angles, 'g')
-	plt.ylabel('Angle (radians)', color='g')
-	plt.grid()
-	plt.axis('tight')
+  _pp_fp = os.path.join(preview_dir, '{}_ppfilt.png'.format(str(_step).zfill(8)))
+  plt.savefig(_pp_fp)
 
-        _pp_fp = os.path.join(preview_dir, '{}_ppfilt.png'.format(str(_step).zfill(8)))
-        plt.savefig(_pp_fp)
+  with tf.Session() as sess:
+    _summary = sess.run(pp_summary, {pp_fp: _pp_fp})
+    summary_writer.add_summary(_summary, _step)
 
-        with tf.Session() as sess:
-          _summary = sess.run(pp_summary, {pp_fp: _pp_fp})
-          summary_writer.add_summary(_summary, _step)
+  print ('Done')
 
-      print 'Done'
+  ckpt_fp = latest_ckpt_fp
 
-      ckpt_fp = latest_ckpt_fp
-
-    time.sleep(1)
+  time.sleep(1)
 
 
 """
@@ -445,7 +446,7 @@ def incept(args):
   while True:
     latest_ckpt_fp = tf.train.latest_checkpoint(args.train_dir)
     if latest_ckpt_fp != ckpt_fp:
-      print 'Incept: {}'.format(latest_ckpt_fp)
+      print ('Incept: {}'.format(latest_ckpt_fp))
 
       sess = tf.Session(graph=gan_graph)
 
@@ -454,19 +455,19 @@ def incept(args):
       _step = sess.run(gan_step)
 
       _G_zs = []
-      for i in xrange(0, args.incept_n, 100):
+      for i in range(0, args.incept_n, 100):
         _G_zs.append(sess.run(gan_G_z, {gan_z: _zs[i:i+100]}))
       _G_zs = np.concatenate(_G_zs, axis=0)
 
       _preds = []
-      for i in xrange(0, args.incept_n, 100):
+      for i in range(0, args.incept_n, 100):
         _preds.append(incept_sess.run(incept_preds, {incept_x: _G_zs[i:i+100]}))
       _preds = np.concatenate(_preds, axis=0)
 
       # Split into k groups
       _incept_scores = []
       split_size = args.incept_n // args.incept_k
-      for i in xrange(args.incept_k):
+      for i in range(args.incept_k):
         _split = _preds[i * split_size:(i + 1) * split_size]
         _kl = _split * (np.log(_split) - np.log(np.expand_dims(np.mean(_split, 0), 0)))
         _kl = np.mean(np.sum(_kl, 1))
@@ -486,7 +487,7 @@ def incept(args):
 
       sess.close()
 
-      print 'Done'
+      print ('Done')
 
       ckpt_fp = latest_ckpt_fp
 
